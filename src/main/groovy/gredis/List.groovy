@@ -1,11 +1,10 @@
 package gredis
 
 /**
- * Created by IntelliJ IDEA.
+ * <p>Groovy implementation of a Redis LIST.
  * User: fred
  * Date: 1 févr. 2010
  * Time: 14:52:39
- * To change this template use File | Settings | File Templates.
  */
 final class List {
 
