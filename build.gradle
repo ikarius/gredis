@@ -1,0 +1,28 @@
+/*
+ * Sample gradle build file -- first one, be nice :)
+ */
+usePlugin 'groovy'
+
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.6.0'
+}
+
+version = '0.9'
+jar.baseName = 'gredis'
+
+sourceCompatibility = 1.5
+targetCompatibility = 1.5
+
+defaultTasks 'clean', 'jar'
+
+
+compileGroovy {
+    source 'src/main/groovy/gredis'
+}
+
+
