@@ -57,7 +57,7 @@ final class List {
     g.rawCall('lindex', name, index)
   }
 
-  def getAll() {
+  def all() {
     assert g
     this[0..-1]
   }
