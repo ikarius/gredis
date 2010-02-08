@@ -6,12 +6,12 @@ package gredis
  * Date: 4 févr. 2010
  * Time: 09:55:50
  */
-abstract class AbstractElement<T> {
+abstract class AbstractElement {
 
   protected String keyName
   protected Gredis g
 
-  T delete() {
+  def delete() {
     assert g
     g.rawCall('del', keyName)
     this

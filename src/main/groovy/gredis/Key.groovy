@@ -6,9 +6,9 @@ package gredis
  * Date: 1 févr. 2010
  * Time: 13:31:18
  */
-final class Key extends AbstractElement<gredis.Key>{
+final class Key extends AbstractElement {
 
-  def Key(Gredis pGredis, String pKeyName, def value = null) {
+  Key(Gredis pGredis, String pKeyName, def value = null) {
     assert pGredis
     keyName = pKeyName
     g  = pGredis
@@ -16,6 +16,7 @@ final class Key extends AbstractElement<gredis.Key>{
     if (value != null) {
       set(value)
     }
+    this
   }
 
   def getValue() {

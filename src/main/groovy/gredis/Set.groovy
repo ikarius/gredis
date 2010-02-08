@@ -6,7 +6,7 @@ package gredis
  * Date: 4 févr. 2010
  * Time: 09:48:37
  */
-final class Set extends AbstractElement<gredis.Set> {
+final class Set extends AbstractElement {
 
   Set(Gredis pGredis, String pKeyname) {
     assert pGredis
