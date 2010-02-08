@@ -1,5 +1,7 @@
 package gredis
 
+import java.util.zip.CRC32
+
 /**
  * <p>Gredis main class.
  * User: fred
@@ -10,6 +12,15 @@ final class Gredis {
 
   private Socket socket;
 
+  boolean pipelining  = false
+  boolean sharding    = false
+
+  int serverCount = 1
+
+  def pipeline = []
+  
+  static final CRC32 = new CRC32()
+
   static final def BULK_COMMANDS = ['set', 'keys', 'lset', 'rpush', 'lpush', 'sadd', 'srem', 'sismember', 'smove', 'getset']
   static final def MULTI_BULK_COMMANDS = ['blpop','brpop']
   static final def STATUS_COMMANDS = ['rename','flushdb','flushall','mset','lpush']
@@ -19,6 +30,8 @@ final class Gredis {
   static final def OK = 'OK'
 
   static final int DEFAULT_PORT = 6379
+  
+  static final int MAX_IN_PIPE  = 2048
 
   static final String TERM = '\r\n'
 
@@ -81,18 +94,23 @@ final class Gredis {
 
     command = command.toLowerCase()
 
+    def raw
+
     if (MULTI_BULK_COMMANDS.contains(command)) {
       //TODO
     }
     else
       if (BULK_COMMANDS.contains(command)) {
-        def raw = command + ' ' + args[0..-2].join(' ') + ' ' + args[-1].toString().length() + TERM + args[-1] + TERM
-        socket << raw
+        raw = command + ' ' + args[0..-2].join(' ') + ' ' + args[-1].toString().length() + TERM + args[-1] + TERM
       }
       else {
-        socket << (command + ' ') << args.join(' ') <<  TERM
+        raw =  command + ' ' + args.join(' ') + TERM
       }
 
+    // Send data ...
+    socket << raw
+
+    // ... process response
     def rep = processResponse()     // Consumes
 
     INTEGER_COMMANDS.contains(command) && BOOLEAN_RESPONSES.contains(command) ? booleanResponse(rep) : rep
@@ -276,5 +294,15 @@ final class Gredis {
   boolean master() {
     OK == rawCall('SLAVEOF NO ONE')
   }
+
+  // -- Sharding
+
+  // Simple one
+  int serverForKey(String key) {
+    assert key
+    CRC32.update(key.bytes)
+    CRC32.getValue() % serverCount
+  }
+
 
 }
