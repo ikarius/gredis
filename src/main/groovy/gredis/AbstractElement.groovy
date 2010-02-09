@@ -21,4 +21,21 @@ abstract class AbstractElement {
     assert g
     g.exists(keyName)
   }
+
+  int ttl() {
+    assert g
+    g.rawCall('ttl', keyName)
+  }
+
+  boolean expire(int seconds) {
+    assert g
+    g.rawCall('expire', keyName, seconds)
+  }
+
+  boolean expireAt(long unixTime) {
+    assert g
+    g.rawCall('expireat', keyName, unixTime)
+  }
+
+
 }
