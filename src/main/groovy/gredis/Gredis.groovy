@@ -12,14 +12,10 @@ final class Gredis {
 
   private Socket socket;
 
-  boolean pipelining  = false
-  boolean sharding    = false
+  boolean pipelining         = false    // Not used yet
+  boolean shardingEnabled    = false    // Teels if sharding is enabled (false by default)
 
-  int serverCount = 1
-
-  def pipeline = []
-  
-  static final CRC32 = new CRC32()
+  Sharding sharding = new Sharding()    // Sharding helper object (ALPHA)
 
   static final def BULK_COMMANDS = ['set', 'keys', 'lset', 'rpush', 'lpush', 'sadd', 'srem', 'sismember', 'smove', 'getset']
   static final def MULTI_BULK_COMMANDS = ['blpop','brpop']
@@ -30,7 +26,7 @@ final class Gredis {
   static final def OK = 'OK'
 
   static final int DEFAULT_PORT = 6379
-  
+
   static final int MAX_IN_PIPE  = 2048
 
   static final String TERM = '\r\n'
@@ -56,6 +52,14 @@ final class Gredis {
     resp == 1
   }
 
+  def enableSharding() {
+    if (socket)
+      throw new Exception("Sharding must be enabled when not connected (@creation time)")
+
+    shardingEnabled = true
+
+    this
+  }
 
   // Categorize :)
   // Anyhow sucks ...
@@ -64,7 +68,7 @@ final class Gredis {
     assert s;
 
     InputStream i = s.inputStream
-    String result = ""
+    String result = ''
 
     char prev = i.read()
 
@@ -81,11 +85,19 @@ final class Gredis {
   }
 
   def connect(String pHost = "localhost", int pPort = DEFAULT_PORT) {
-    socket = new Socket(pHost, pPort)
+    if (shardingEnabled)
+      sharding.addServer(pHost, pPort)
+    else {
+      socket = new Socket(pHost, pPort)
+    }
+
     this
   }
 
-  def rawCall(String command, Object... args) {
+  def rawCall(String command, String... args) {
+
+    if (shardingEnabled)
+      socket = sharding.sockets.(sharding.getServerForKey(args[0]))
 
     if (!socket || socket.closed)
       throw new RuntimeException("Not connected")
@@ -114,8 +126,8 @@ final class Gredis {
     def rep = processResponse()     // Consumes
 
     INTEGER_COMMANDS.contains(command) && BOOLEAN_RESPONSES.contains(command) ? booleanResponse(rep) : rep
-  }
 
+  }
 
   def processResponse() {
     assert socket
@@ -168,7 +180,6 @@ final class Gredis {
           result
         }
         break
-
 
     // -- Errors
       case '-':
@@ -294,15 +305,5 @@ final class Gredis {
   boolean master() {
     OK == rawCall('SLAVEOF NO ONE')
   }
-
-  // -- Sharding
-
-  // Simple one
-  int serverForKey(String key) {
-    assert key
-    CRC32.update(key.bytes)
-    CRC32.getValue() % serverCount
-  }
-
 
 }
